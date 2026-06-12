@@ -28,12 +28,18 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // getClaims() validates the JWT signature — safe for proxy
-  // Never use getSession() in server code
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to /login
+  // If logged in and trying to visit /login — redirect to dashboard
+  if (user && request.nextUrl.pathname.startsWith("/login")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
+
+  // If not logged in and trying to visit a protected route — redirect to /login
   if (!user && !request.nextUrl.pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
