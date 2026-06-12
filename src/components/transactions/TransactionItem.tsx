@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useSettings } from "@/hooks/useSettings";
 import { formatCurrency } from "@/lib/utils/formatcurrency";
+import { formatDate } from "@/lib/utils/formatdate";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,13 +65,7 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
     ? settings.expenseCategories
     : settings.incomeCategories;
 
-  const formattedDate = new Date(
-    transaction.date + "T00:00:00",
-  ).toLocaleDateString("en-CA", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const formattedDate = formatDate(transaction.date);
 
   async function handleUpdate() {
     try {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useDashboard } from "@/hooks/useDashboard";
 import { formatCurrency } from "@/lib/utils/formatcurrency";
+import { formatDateShort } from "@/lib/utils/formatdate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ArrowRight } from "lucide-react";
 
@@ -44,12 +45,7 @@ export default function RecentTransactions() {
           <div className="divide-y divide-fintrak-border">
             {recentTransactions.map((t) => {
               const isExpense = t.type === "expense";
-              const formattedDate = new Date(
-                t.date + "T00:00:00",
-              ).toLocaleDateString("en-CA", {
-                month: "short",
-                day: "numeric",
-              });
+              const formattedDate = formatDateShort(t.date);
 
               return (
                 <div
