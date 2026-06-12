@@ -8,6 +8,7 @@ import Sidebar from "@/components/sidebar/Sidebar";
 import { QuickAddProvider } from "@/components/quick-add/QuickAddProvider";
 import QuickAddButton from "@/components/quick-add/QuickAddButton";
 import QuickAddDialog from "@/components/quick-add/QuickAddDialog";
+import { Toaster } from "@/components/ui/sonner";
 
 const supabase = createClient();
 
@@ -54,6 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <QuickAddButton />
         <QuickAddDialog />
+        <Toaster position="top-right" />
       </QuickAddProvider>
     </QueryClientProvider>
   );

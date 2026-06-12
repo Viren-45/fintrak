@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import type { Transaction } from "@/types";
 
@@ -77,18 +78,24 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
         date: editForm.date,
         note: editForm.note || undefined,
       });
+      toast.success("Transaction updated successfully");
       setShowEditDialog(false);
     } catch {
-      // error handled by hook
+      toast.error("Failed to update transaction", {
+        description: "Please try again.",
+      });
     }
   }
 
   async function handleDelete() {
     try {
       await deleteTransaction(transaction.id);
+      toast.success("Transaction deleted");
       setShowDeleteDialog(false);
     } catch {
-      // error handled by hook
+      toast.error("Failed to delete transaction", {
+        description: "Please try again.",
+      });
     }
   }
 

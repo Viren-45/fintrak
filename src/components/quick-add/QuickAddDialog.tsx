@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import type { QuickAddType } from "@/types";
 
@@ -92,8 +93,17 @@ export default function QuickAddDialog() {
         date: form.date,
         note: form.note || undefined,
       });
+      toast.success(
+        `${form.type === "expense" ? "Expense" : "Income"} added successfully`,
+        {
+          description: `${form.category} — $${Number(form.amount).toFixed(2)}`,
+        },
+      );
       handleClose();
     } catch {
+      toast.error("Failed to save transaction", {
+        description: "Please try again.",
+      });
       setForm((prev) => ({
         ...prev,
         error: "Something went wrong. Please try again.",
