@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import AuthLayout from "@/components/auth/AuthLayout";
-import LoginForm from "@/components/auth/LoginForm";
+import SignupForm from "@/components/auth/SignupForm";
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <AuthLayout>
       <Suspense>
-        <LoginForm />
+        <SignupForm />
       </Suspense>
     </AuthLayout>
   );

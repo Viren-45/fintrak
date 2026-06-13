@@ -33,14 +33,22 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // If logged in and trying to visit /login — redirect to dashboard
-  if (user && request.nextUrl.pathname.startsWith("/login")) {
+  if (
+    user &&
+    (request.nextUrl.pathname.startsWith("/login") ||
+      request.nextUrl.pathname.startsWith("/signup"))
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
   // If not logged in and trying to visit a protected route — redirect to /login
-  if (!user && !request.nextUrl.pathname.startsWith("/login")) {
+  if (
+    !user &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/signup")
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

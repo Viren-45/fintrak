@@ -142,4 +142,10 @@
   --color-fintrak-border: #E2E8F0;
   --color-fintrak-text-primary: #0F172A;
   --color-fintrak-text-secondary: #64748B;
-}
+
+  /* Auth page specific colors */
+  --color-auth-accent: #4053EF;
+  --color-auth-accent-hover: #3444D4;
+  --color-auth-link: #4053EF;
+  --color-auth-google-border: #E2E8F0;
+  }
