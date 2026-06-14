@@ -66,21 +66,24 @@ export async function buildContext(): Promise<string> {
 
   const settings: Settings = settingsResult.data
     ? {
-        userName: settingsResult.data.user_name,
         currency: settingsResult.data.currency,
         expenseCategories: settingsResult.data.expense_categories,
         incomeCategories: settingsResult.data.income_categories,
       }
     : {
-        userName: "",
         currency: "CAD",
         expenseCategories: [],
         incomeCategories: [],
       };
 
+  const userName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    "";
+
   // Build each context section and join them
   const sections = [
-    buildProfileContext(settings),
+    buildProfileContext(settings, userName),
     buildMonthlyContext(transactions),
     buildYearlyContext(transactions),
     buildKeywordContext(transactions),

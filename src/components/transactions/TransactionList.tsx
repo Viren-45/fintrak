@@ -3,25 +3,28 @@
 import { useState, useMemo } from "react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { formatCurrency } from "@/lib/utils/formatcurrency";
-import TransactionItem from "@/components/transactions/TransactionItem";
-import ExpenseFilters from "./ExpenseFilters";
+import TransactionItem from "./TransactionItem";
+import TransactionFilters from "./TransactionFilters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import type { TransactionType } from "@/types";
 
-// Get current month as default filter e.g. "2025-06"
+interface TransactionListProps {
+  type: TransactionType;
+}
+
 function getCurrentMonth(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export default function ExpenseList() {
-  const { transactions, isLoading, error } = useTransactions("expense");
+export default function TransactionList({ type }: TransactionListProps) {
+  const { transactions, isLoading, error } = useTransactions(type);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
 
-  // Filter transactions based on search, category, and month
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
       const matchesSearch =
@@ -39,10 +42,17 @@ export default function ExpenseList() {
     });
   }, [transactions, search, selectedCategory, selectedMonth]);
 
-  // Monthly total for filtered transactions
   const monthlyTotal = useMemo(() => {
     return filtered.reduce((sum, t) => sum + t.amount, 0);
   }, [filtered]);
+
+  const isExpense = type === "expense";
+  const totalColor = isExpense ? "text-fintrak-expense" : "text-fintrak-income";
+  const itemNoun = isExpense ? "expense" : "income entry";
+  const itemNounPlural = isExpense ? "expenses" : "income entries";
+  const emptyText = isExpense
+    ? "No expenses yet. Tap + to add one."
+    : "No income yet. Tap + to add one.";
 
   if (isLoading) {
     return (
@@ -67,17 +77,18 @@ export default function ExpenseList() {
     <div className="space-y-4">
       {/* Monthly total */}
       <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-bold text-fintrak-expense">
+        <span className={`text-3xl font-bold ${totalColor}`}>
           {formatCurrency(monthlyTotal)}
         </span>
         <span className="text-sm text-fintrak-text-secondary">
-          {filtered.length} {filtered.length === 1 ? "expense" : "expenses"}
+          {filtered.length} {filtered.length === 1 ? itemNoun : itemNounPlural}
           {selectedMonth !== "all" ? " this month" : " total"}
         </span>
       </div>
 
       {/* Filters */}
-      <ExpenseFilters
+      <TransactionFilters
+        type={type}
         search={search}
         onSearchChange={setSearch}
         selectedCategory={selectedCategory}
@@ -93,8 +104,8 @@ export default function ExpenseList() {
             <div className="py-16 text-center">
               <p className="text-fintrak-text-secondary text-sm">
                 {transactions.length === 0
-                  ? "No expenses yet. Tap + to add one."
-                  : "No expenses match your filters."}
+                  ? emptyText
+                  : "No results match your filters."}
               </p>
             </div>
           ) : (

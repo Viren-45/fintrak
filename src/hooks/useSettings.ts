@@ -6,34 +6,29 @@ import type { Settings } from "@/types";
 
 const supabase = createClient();
 
-const DEFAULT_SETTINGS: Settings = {
+type SettingsWithName = Settings & { userName: string };
+
+// Minimal placeholder shown only while the query is loading
+const EMPTY_SETTINGS: SettingsWithName = {
   userName: "",
   currency: "CAD",
-  expenseCategories: [
-    "Groceries",
-    "Dining",
-    "Transport",
-    "Entertainment",
-    "Utilities",
-    "Health",
-    "Shopping",
-    "Other",
-  ],
-  incomeCategories: [
-    "Salary",
-    "Freelance",
-    "Side Income",
-    "Gift",
-    "Opening Balance",
-    "Other",
-  ],
+  expenseCategories: [],
+  incomeCategories: [],
 };
 
-async function fetchSettings(): Promise<Settings> {
+// ─── Fetch ─────────────────────────────────────────────────────────────────
+
+async function fetchSettings(): Promise<SettingsWithName> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+
+  // Name comes from auth metadata — works for email signup AND Google OAuth
+  const userName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    "";
 
   const { data, error } = await supabase
     .from("settings")
@@ -41,18 +36,23 @@ async function fetchSettings(): Promise<Settings> {
     .eq("user_id", user.id)
     .single();
 
-  // PGRST116 = no row found — first time user, return defaults
-  if (error && error.code !== "PGRST116") throw error;
-
-  if (!data) return DEFAULT_SETTINGS;
+  // Every user gets a settings row created at signup —
+  // a missing row here means something went wrong, not "new user"
+  if (error) {
+    throw new Error(
+      "Could not load your settings. Please try refreshing the page.",
+    );
+  }
 
   return {
-    userName: data.user_name,
+    userName,
     currency: data.currency,
     expenseCategories: data.expense_categories,
     incomeCategories: data.income_categories,
   };
 }
+
+// ─── Update settings (currency + categories) ───────────────────────────────
 
 async function updateSettings(updated: Settings): Promise<void> {
   const {
@@ -63,7 +63,6 @@ async function updateSettings(updated: Settings): Promise<void> {
   const { error } = await supabase.from("settings").upsert(
     {
       user_id: user.id,
-      user_name: updated.userName,
       currency: updated.currency,
       expense_categories: updated.expenseCategories,
       income_categories: updated.incomeCategories,
@@ -74,11 +73,23 @@ async function updateSettings(updated: Settings): Promise<void> {
   if (error) throw error;
 }
 
+// ─── Update name (auth metadata) ───────────────────────────────────────────
+
+async function updateUserName(name: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({
+    data: { full_name: name },
+  });
+
+  if (error) throw error;
+}
+
+// ─── Hook ──────────────────────────────────────────────────────────────────
+
 export function useSettings() {
   const queryClient = useQueryClient();
 
   const {
-    data: settings = DEFAULT_SETTINGS,
+    data: settings = EMPTY_SETTINGS,
     isLoading,
     error,
   } = useQuery({
@@ -89,8 +100,24 @@ export function useSettings() {
   const { mutateAsync: saveSettings, isPending: isSaving } = useMutation({
     mutationFn: updateSettings,
     onSuccess: (_, updated) => {
-      // Update the cache immediately — no refetch needed
-      queryClient.setQueryData(["settings"], updated);
+      queryClient.setQueryData(
+        ["settings"],
+        (old: SettingsWithName | undefined) => ({
+          ...updated,
+          userName: old?.userName ?? "",
+        }),
+      );
+    },
+  });
+
+  const { mutateAsync: saveUserName, isPending: isSavingName } = useMutation({
+    mutationFn: updateUserName,
+    onSuccess: (_, name) => {
+      queryClient.setQueryData(
+        ["settings"],
+        (old: SettingsWithName | undefined) =>
+          old ? { ...old, userName: name } : old,
+      );
     },
   });
 
@@ -98,7 +125,9 @@ export function useSettings() {
     settings,
     isLoading,
     isSaving,
+    isSavingName,
     error: error?.message ?? null,
     saveSettings,
+    saveUserName,
   };
 }

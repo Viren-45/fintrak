@@ -8,9 +8,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import CategoryManager from "./CategoryManager";
+import DeleteAccountSection from "./DeleteAccountSection";
 
 export default function SettingsForm() {
-  const { settings, isLoading, error, saveSettings, isSaving } = useSettings();
+  const {
+    settings,
+    isLoading,
+    error,
+    saveSettings,
+    saveUserName,
+    isSaving,
+    isSavingName,
+  } = useSettings();
 
   const [userName, setUserName] = useState("");
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
@@ -26,15 +35,28 @@ export default function SettingsForm() {
     setInitialized(true);
   }
 
+  const isSavingAny = isSaving || isSavingName;
+
   async function handleSave() {
     setSaveSuccess(false);
     try {
-      await saveSettings({
-        userName,
-        currency: settings.currency,
-        expenseCategories,
-        incomeCategories,
-      });
+      // Save name only if it changed — avoids unnecessary auth calls
+      const promises: Promise<unknown>[] = [];
+
+      if (userName !== settings.userName) {
+        promises.push(saveUserName(userName));
+      }
+
+      promises.push(
+        saveSettings({
+          currency: settings.currency,
+          expenseCategories,
+          incomeCategories,
+        }),
+      );
+
+      await Promise.all(promises);
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch {
@@ -111,8 +133,10 @@ export default function SettingsForm() {
         <CardContent>
           <CategoryManager
             title="Manage your expense categories"
+            type="expense"
             categories={expenseCategories}
             onChange={setExpenseCategories}
+            permanentItems={["Other"]}
           />
         </CardContent>
       </Card>
@@ -127,9 +151,10 @@ export default function SettingsForm() {
         <CardContent>
           <CategoryManager
             title="Manage your income categories"
+            type="income"
             categories={incomeCategories}
             onChange={setIncomeCategories}
-            permanentItems={["Opening Balance"]}
+            permanentItems={["Opening Balance", "Other"]}
           />
         </CardContent>
       </Card>
@@ -138,10 +163,10 @@ export default function SettingsForm() {
       <div className="flex items-center gap-3">
         <Button
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSavingAny}
           className="bg-fintrak-accent hover:bg-fintrak-accent/90 text-white px-8"
         >
-          {isSaving ? (
+          {isSavingAny ? (
             <>
               <Loader2 size={16} className="animate-spin mr-2" />
               Saving...
@@ -157,6 +182,9 @@ export default function SettingsForm() {
           </p>
         )}
       </div>
+
+      {/* Danger zone */}
+      <DeleteAccountSection />
     </div>
   );
 }

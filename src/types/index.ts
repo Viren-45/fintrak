@@ -35,7 +35,6 @@ export type Budget = {
 
 // ─── Settings ──────────────────────────────────────────────────────────────────
 export type Settings = {
-  userName: string;
   currency: string; // e.g. "CAD"
   expenseCategories: string[];
   incomeCategories: string[];

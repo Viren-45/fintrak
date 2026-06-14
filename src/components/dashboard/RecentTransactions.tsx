@@ -18,7 +18,7 @@ export default function RecentTransactions() {
             Recent Transactions
           </CardTitle>
           <Link
-            href="/expenses"
+            href="/transactions"
             className="flex items-center gap-1 text-xs text-fintrak-accent hover:underline"
           >
             View all

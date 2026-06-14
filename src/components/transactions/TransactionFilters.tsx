@@ -9,8 +9,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSettings } from "@/hooks/useSettings";
+import type { TransactionType } from "@/types";
 
-interface ExpenseFiltersProps {
+interface TransactionFiltersProps {
+  type: TransactionType;
   search: string;
   onSearchChange: (value: string) => void;
   selectedCategory: string;
@@ -19,7 +21,6 @@ interface ExpenseFiltersProps {
   onMonthChange: (value: string) => void;
 }
 
-// Generate last 12 months as filter options
 function getMonthOptions() {
   const options = [];
   const now = new Date();
@@ -37,16 +38,21 @@ function getMonthOptions() {
   return options;
 }
 
-export default function ExpenseFilters({
+export default function TransactionFilters({
+  type,
   search,
   onSearchChange,
   selectedCategory,
   onCategoryChange,
   selectedMonth,
   onMonthChange,
-}: ExpenseFiltersProps) {
+}: TransactionFiltersProps) {
   const { settings } = useSettings();
   const monthOptions = getMonthOptions();
+
+  // Pull the right category list based on the active segment
+  const categories =
+    type === "expense" ? settings.expenseCategories : settings.incomeCategories;
 
   return (
     <div className="flex flex-col sm:flex-row gap-3">
@@ -65,7 +71,7 @@ export default function ExpenseFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All categories</SelectItem>
-          {settings.expenseCategories.map((cat) => (
+          {categories.map((cat) => (
             <SelectItem key={cat} value={cat}>
               {cat}
             </SelectItem>

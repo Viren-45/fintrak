@@ -11,12 +11,10 @@ export async function signup(formData: FormData) {
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
-  // Validate passwords match
   if (password !== confirmPassword) {
     redirect(`/signup?error=${encodeURIComponent("Passwords do not match")}`);
   }
 
-  // Validate password length
   if (password.length < 8) {
     redirect(
       `/signup?error=${encodeURIComponent("Password must be at least 8 characters")}`,
@@ -39,7 +37,6 @@ export async function signup(formData: FormData) {
 
   // When email confirmations are enabled and the email already exists,
   // Supabase returns a fake/obfuscated user with no identities array
-  // This is how we detect a duplicate email
   if (data.user && data.user.identities && data.user.identities.length === 0) {
     redirect(
       `/signup?error=${encodeURIComponent(
@@ -48,35 +45,8 @@ export async function signup(formData: FormData) {
     );
   }
 
-  // Create default settings row for the new user
-  if (data.user) {
-    await supabase.from("settings").insert({
-      user_id: data.user.id,
-      user_name: fullName,
-      currency: "CAD",
-      expense_categories: [
-        "Groceries",
-        "Dining",
-        "Transport",
-        "Entertainment",
-        "Utilities",
-        "Health",
-        "Shopping",
-        "Other",
-      ],
-      income_categories: [
-        "Salary",
-        "Freelance",
-        "Side Income",
-        "Gift",
-        "Opening Balance",
-        "Other",
-      ],
-    });
-  }
+  // Settings row is created automatically by a database trigger on auth.users
 
-  // If email confirmation is required, show a success message
-  // If not required, redirect straight to dashboard
   if (!data.session) {
     redirect(
       `/login?message=${encodeURIComponent(
