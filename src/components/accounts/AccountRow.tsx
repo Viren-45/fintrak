@@ -8,33 +8,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Landmark,
-  PiggyBank,
-  CreditCard,
-  Wallet,
-  TrendingUp,
-  MoreVertical,
-  Pencil,
-  Trash2,
-} from "lucide-react";
-import type { Account, AccountType } from "@/types";
-
-// Fallback icon + label per account type — shared across accounts components
-export const TYPE_META: Record<
-  AccountType,
-  { label: string; icon: React.ReactNode }
-> = {
-  chequing: { label: "Chequing", icon: <Landmark size={18} /> },
-  savings: { label: "Savings", icon: <PiggyBank size={18} /> },
-  credit_card: { label: "Credit Card", icon: <CreditCard size={18} /> },
-  cash: { label: "Cash", icon: <Wallet size={18} /> },
-  investment: { label: "Investment", icon: <TrendingUp size={18} /> },
-};
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import type { Account } from "@/types";
+import { ACCOUNT_TYPE_META } from "@/lib/accountMeta";
 
 function getAccountLabel(account: Account): string {
   if (account.nickname) return account.nickname;
-  const typeLabel = TYPE_META[account.type].label;
+  const typeLabel = ACCOUNT_TYPE_META[account.type].label;
   if (account.bankId) {
     const bank = getBankById(account.bankId);
     if (bank) return `${bank.name} — ${typeLabel}`;
@@ -48,7 +28,7 @@ function getAccountSubtext(account: Account): string {
     const bank = getBankById(account.bankId);
     if (bank) parts.push(bank.name);
   } else {
-    parts.push(TYPE_META[account.type].label);
+    parts.push(ACCOUNT_TYPE_META[account.type].label);
   }
   if (account.lastFour) parts.push(`•••• ${account.lastFour}`);
   return parts.join(" ");
@@ -87,7 +67,7 @@ export default function AccountRow({
             />
           ) : (
             <span className="text-fintrak-text-secondary">
-              {TYPE_META[account.type].icon}
+              {ACCOUNT_TYPE_META[account.type].icon}
             </span>
           )}
         </div>

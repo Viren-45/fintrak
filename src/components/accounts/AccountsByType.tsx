@@ -7,7 +7,8 @@ import {
   calculateAccountBalance,
 } from "@/lib/utils/accountBalances";
 import { formatCurrency } from "@/lib/utils/formatcurrency";
-import AccountRow, { TYPE_META } from "./AccountRow";
+import AccountRow from "./AccountRow";
+import { ACCOUNT_TYPE_META } from "@/lib/accountMeta";
 import {
   Accordion,
   AccordionContent,
@@ -78,7 +79,7 @@ export default function AccountsByType({
                     <AccordionTrigger className="px-4 py-3 hover:no-underline cursor-pointer">
                       <div className="flex items-center justify-between w-full pr-2">
                         <span className="text-sm font-medium text-fintrak-text-primary">
-                          {TYPE_META[group.type].label}
+                          {ACCOUNT_TYPE_META[group.type].label}
                         </span>
                         <span
                           className={`text-sm font-semibold ${

@@ -7,7 +7,7 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { getBankById, getBankLogoUrl } from "@/lib/banks";
 import { formatCurrency } from "@/lib/utils/formatcurrency";
 import { formatDate } from "@/lib/utils/formatdate";
-import { TYPE_META } from "@/components/accounts/AccountRow";
+import { ACCOUNT_TYPE_META } from "@/lib/accountMeta";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -132,7 +132,7 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
             />
           ) : account ? (
             <span className="text-fintrak-text-secondary">
-              {TYPE_META[account.type].icon}
+              {ACCOUNT_TYPE_META[account.type].icon}
             </span>
           ) : null}
         </div>

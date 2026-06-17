@@ -1,22 +1,15 @@
 import type { Account, Transaction } from "@/types";
 import { getBankById } from "@/lib/banks";
 import { calculateAccountBalance } from "@/lib/utils/accountBalances";
-
-const TYPE_LABELS: Record<Account["type"], string> = {
-  chequing: "Chequing",
-  savings: "Savings",
-  credit_card: "Credit Card",
-  cash: "Cash",
-  investment: "Investment",
-};
+import { ACCOUNT_TYPE_META } from "@/lib/accountMeta";
 
 function getAccountName(account: Account): string {
   if (account.nickname) return account.nickname;
   if (account.bankId) {
     const bank = getBankById(account.bankId);
-    if (bank) return `${bank.name} ${TYPE_LABELS[account.type]}`;
+    if (bank) return `${bank.name} ${ACCOUNT_TYPE_META[account.type].label}`;
   }
-  return TYPE_LABELS[account.type];
+  return ACCOUNT_TYPE_META[account.type].label;
 }
 
 /**
@@ -42,7 +35,7 @@ No accounts set up yet.
     netWorth += balance;
 
     const name = getAccountName(account);
-    const typeLabel = TYPE_LABELS[account.type];
+    const typeLabel = ACCOUNT_TYPE_META[account.type].label;
 
     // Credit cards: a negative balance means money owed
     if (account.type === "credit_card") {
