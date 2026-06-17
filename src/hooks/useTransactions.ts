@@ -37,6 +37,7 @@ async function fetchTransactions(
     category: row.category,
     date: row.date,
     note: row.note ?? undefined,
+    accountId: row.account_id,
     createdAt: row.created_at,
   }));
 }
@@ -58,6 +59,7 @@ async function addTransaction(input: AddTransactionInput): Promise<void> {
     category: input.category,
     date: input.date,
     note: input.note ?? null,
+    account_id: input.accountId,
   });
 
   if (error) throw error;
@@ -81,6 +83,7 @@ async function updateTransaction(input: UpdateTransactionInput): Promise<void> {
       category: input.category,
       date: input.date,
       note: input.note ?? null,
+      account_id: input.accountId,
     })
     .eq("id", input.id)
     .eq("user_id", user.id);

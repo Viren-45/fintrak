@@ -8,6 +8,7 @@ export type Transaction = {
   category: string;
   date: string; // ISO date string e.g. "2025-01-15"
   note?: string;
+  accountId: string;
   createdAt: string; // ISO datetime string
 };
 
@@ -38,6 +39,25 @@ export type Settings = {
   currency: string; // e.g. "CAD"
   expenseCategories: string[];
   incomeCategories: string[];
+};
+
+// ─── Account ─────────────────────────────────────────────────────────────────
+export type AccountType =
+  | "chequing"
+  | "savings"
+  | "credit_card"
+  | "cash"
+  | "investment";
+
+export type Account = {
+  id: string;
+  type: AccountType;
+  bankId?: string; // undefined for cash / investment
+  nickname?: string; // undefined = fall back to bank + type label
+  lastFour?: string; // undefined for cash / investment, optional otherwise
+  openingBalance: number; // signed: negative for credit card debt
+  creditLimit?: number; // undefined unless credit card with a limit
+  createdAt: string;
 };
 
 // ─── Quick Add Dialog ──────────────────────────────────────────────────────────

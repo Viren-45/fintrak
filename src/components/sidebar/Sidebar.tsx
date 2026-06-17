@@ -7,6 +7,7 @@ import { logout } from "@/app/logout/actions";
 import {
   LayoutDashboard,
   ArrowLeftRight,
+  Wallet,
   PieChart,
   Target,
   Bot,
@@ -19,6 +20,7 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
+  { label: "Accounts", href: "/accounts", icon: Wallet },
   { label: "Budgets", href: "/budgets", icon: PieChart },
   { label: "Goals", href: "/goals", icon: Target },
   { label: "AI Advisor", href: "/ai-advisor", icon: Bot },

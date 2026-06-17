@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useSettings } from "@/hooks/useSettings";
+import { useAccounts } from "@/hooks/useAccounts";
+import { getBankById, getBankLogoUrl } from "@/lib/banks";
 import { formatCurrency } from "@/lib/utils/formatcurrency";
 import { formatDate } from "@/lib/utils/formatdate";
+import { TYPE_META } from "@/components/accounts/AccountRow";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +35,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
-import type { Transaction } from "@/types";
+import type { Transaction, Account } from "@/types";
+
+function getAccountLabel(account: Account): string {
+  if (account.nickname) return account.nickname;
+  if (account.bankId) {
+    const bank = getBankById(account.bankId);
+    if (bank) return bank.name;
+  }
+  return account.type.charAt(0).toUpperCase() + account.type.slice(1);
+}
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -44,6 +56,7 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
   const { updateTransaction, deleteTransaction, isUpdating, isDeleting } =
     useTransactions(type);
   const { settings } = useSettings();
+  const { accounts } = useAccounts();
 
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -51,22 +64,23 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
   const [editForm, setEditForm] = useState({
     amount: String(transaction.amount),
     category: transaction.category,
+    accountId: transaction.accountId,
     date: transaction.date,
     note: transaction.note ?? "",
   });
 
-  // Derived values based on type
   const isExpense = type === "expense";
   const amountColor = isExpense
     ? "text-fintrak-expense"
     : "text-fintrak-income";
-  const dotColor = isExpense ? "bg-fintrak-expense" : "bg-fintrak-income";
-  const amountPrefix = isExpense ? "-" : "+";
+  const amountPrefix = isExpense ? "−" : "+";
   const categories = isExpense
     ? settings.expenseCategories
     : settings.incomeCategories;
 
-  const formattedDate = formatDate(transaction.date);
+  const account = accounts.find((a) => a.id === transaction.accountId);
+  const logoUrl = account?.bankId ? getBankLogoUrl(account.bankId) : null;
+  const accountLabel = account ? getAccountLabel(account) : "Unknown account";
 
   async function handleUpdate() {
     try {
@@ -75,10 +89,11 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
         type,
         amount: Number(editForm.amount),
         category: editForm.category,
+        accountId: editForm.accountId,
         date: editForm.date,
         note: editForm.note || undefined,
       });
-      toast.success("Transaction updated successfully");
+      toast.success("Transaction updated");
       setShowEditDialog(false);
     } catch {
       toast.error("Failed to update transaction", {
@@ -102,41 +117,61 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
   return (
     <>
       {/* Transaction row */}
-      <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-fintrak-bg transition-colors group">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-fintrak-text-primary truncate">
-              {transaction.category}
-            </p>
-            {transaction.note && (
-              <p className="text-xs text-fintrak-text-secondary truncate">
-                {transaction.note}
-              </p>
-            )}
-            <p className="text-xs text-fintrak-text-secondary">
-              {formattedDate}
-            </p>
-          </div>
+      <div className="group flex items-center gap-3 px-4 py-3.5 hover:bg-fintrak-bg transition-colors">
+        {/* Logo / type icon */}
+        <div className="w-10 h-10 rounded-lg bg-fintrak-bg border border-fintrak-border shrink-0 flex items-center justify-center overflow-hidden">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt=""
+              className="w-6 h-6 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : account ? (
+            <span className="text-fintrak-text-secondary">
+              {TYPE_META[account.type].icon}
+            </span>
+          ) : null}
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <span className={`text-sm font-semibold ${amountColor}`}>
-            {amountPrefix}
-            {formatCurrency(transaction.amount)}
-          </span>
+        {/* Middle — category, account, note */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-fintrak-text-primary truncate">
+            {transaction.category}
+          </p>
+          <p className="text-xs text-fintrak-text-secondary truncate">
+            {accountLabel}
+            {transaction.note ? ` · ${transaction.note}` : ""}
+          </p>
+        </div>
 
+        {/* Right — amount, date, actions */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right">
+            <p className={`text-sm font-semibold ${amountColor}`}>
+              {amountPrefix}
+              {formatCurrency(transaction.amount)}
+            </p>
+            <p className="text-xs text-fintrak-text-secondary">
+              {formatDate(transaction.date)}
+            </p>
+          </div>
+
+          {/* Actions — visible on hover */}
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => setShowEditDialog(true)}
-              className="p-1.5 rounded-md text-fintrak-text-secondary hover:text-fintrak-text-primary hover:bg-fintrak-border transition-colors"
+              className="p-1.5 rounded-md text-fintrak-text-secondary hover:text-fintrak-text-primary hover:bg-fintrak-border transition-colors cursor-pointer"
               aria-label={`Edit ${type}`}
             >
               <Pencil size={14} />
             </button>
             <button
               onClick={() => setShowDeleteDialog(true)}
-              className="p-1.5 rounded-md text-fintrak-text-secondary hover:text-fintrak-expense hover:bg-red-50 transition-colors"
+              className="p-1.5 rounded-md text-fintrak-text-secondary hover:text-fintrak-expense hover:bg-red-50 transition-colors cursor-pointer"
               aria-label={`Delete ${type}`}
             >
               <Trash2 size={14} />
@@ -188,13 +223,45 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
                   setEditForm((prev) => ({ ...prev, category: val }))
                 }
               >
-                <SelectTrigger className="border-fintrak-border focus:ring-fintrak-accent">
+                <SelectTrigger className="border-fintrak-border focus:ring-fintrak-accent cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
+                    <SelectItem
+                      key={cat}
+                      value={cat}
+                      className="cursor-pointer"
+                    >
                       {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Account */}
+            <div className="space-y-1.5">
+              <Label className="text-fintrak-text-primary text-sm font-medium">
+                Account
+              </Label>
+              <Select
+                value={editForm.accountId}
+                onValueChange={(val) =>
+                  setEditForm((prev) => ({ ...prev, accountId: val }))
+                }
+              >
+                <SelectTrigger className="border-fintrak-border focus:ring-fintrak-accent cursor-pointer">
+                  <SelectValue placeholder="Select an account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((acc) => (
+                    <SelectItem
+                      key={acc.id}
+                      value={acc.id}
+                      className="cursor-pointer"
+                    >
+                      {getAccountLabel(acc)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -241,14 +308,14 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
                 type="button"
                 variant="outline"
                 onClick={() => setShowEditDialog(false)}
-                className="flex-1 border-fintrak-border text-fintrak-text-secondary"
+                className="flex-1 border-fintrak-border text-fintrak-text-secondary cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleUpdate}
                 disabled={isUpdating}
-                className="flex-1 bg-fintrak-accent hover:bg-fintrak-accent/90 text-white"
+                className="flex-1 bg-fintrak-accent hover:bg-fintrak-accent/90 text-white cursor-pointer"
               >
                 {isUpdating ? (
                   <>
@@ -273,17 +340,17 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
             </AlertDialogTitle>
             <AlertDialogDescription className="text-fintrak-text-secondary">
               {formatCurrency(transaction.amount)} — {transaction.category} on{" "}
-              {formattedDate}. This cannot be undone.
+              {formatDate(transaction.date)}. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-fintrak-border text-fintrak-text-secondary">
+            <AlertDialogCancel className="border-fintrak-border text-fintrak-text-secondary cursor-pointer">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-fintrak-expense hover:bg-fintrak-expense/90 text-white"
+              className="bg-fintrak-expense hover:bg-fintrak-expense/90 text-white cursor-pointer"
             >
               {isDeleting ? (
                 <>
