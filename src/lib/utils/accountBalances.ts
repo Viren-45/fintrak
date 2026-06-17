@@ -1,8 +1,13 @@
+// src/lib/utils/accountBalances.ts
+
 import type { Account, AccountType, Transaction } from "@/types";
+import { isTransfer, isIncomeExpense } from "@/types";
 
 /**
- * Returns the current balance for an account:
- * opening balance + income into it − expenses out of it.
+ * Returns the current balance for an account.
+ *
+ * Income adds to the account, expenses subtract from it.
+ * Transfers debit the from account and credit the to account.
  *
  * Works uniformly across account types thanks to signed balances —
  * e.g. an expense on a credit card pushes its (negative) balance
@@ -12,12 +17,17 @@ export function calculateAccountBalance(
   account: Account,
   transactions: Transaction[],
 ): number {
-  const accountTransactions = transactions.filter(
-    (t) => t.accountId === account.id,
-  );
+  const transactionTotal = transactions.reduce((sum, t) => {
+    if (isIncomeExpense(t) && t.accountId === account.id) {
+      return t.type === "income" ? sum + t.amount : sum - t.amount;
+    }
 
-  const transactionTotal = accountTransactions.reduce((sum, t) => {
-    return t.type === "income" ? sum + t.amount : sum - t.amount;
+    if (isTransfer(t)) {
+      if (t.fromAccountId === account.id) return sum - t.amount;
+      if (t.toAccountId === account.id) return sum + t.amount;
+    }
+
+    return sum;
   }, 0);
 
   return account.openingBalance + transactionTotal;

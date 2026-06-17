@@ -1,3 +1,5 @@
+// src/app/(app)/transactions/page.tsx
+
 import { Suspense } from "react";
 import TransactionTabs from "@/components/transactions/TransactionTabs";
 

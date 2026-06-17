@@ -1,3 +1,5 @@
+// src/lib/ai/context/buildAccountsContext.ts
+
 import type { Account, Transaction } from "@/types";
 import { getBankById } from "@/lib/banks";
 import { calculateAccountBalance } from "@/lib/utils/accountBalances";

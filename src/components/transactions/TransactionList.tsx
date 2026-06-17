@@ -1,3 +1,5 @@
+// src/components/transactions/TransactionList.tsx
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -7,10 +9,10 @@ import TransactionItem from "./TransactionItem";
 import TransactionFilters from "./TransactionFilters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import type { TransactionType } from "@/types";
+import type { TransactionType, IncomeExpenseTransaction } from "@/types";
 
 interface TransactionListProps {
-  type: TransactionType;
+  type: Exclude<TransactionType, "transfer">;
 }
 
 function getCurrentMonth(): string {
@@ -26,7 +28,7 @@ export default function TransactionList({ type }: TransactionListProps) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
 
   const filtered = useMemo(() => {
-    return transactions.filter((t) => {
+    return (transactions as IncomeExpenseTransaction[]).filter((t) => {
       const matchesSearch =
         search === "" ||
         t.category.toLowerCase().includes(search.toLowerCase()) ||

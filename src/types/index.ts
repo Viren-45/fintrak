@@ -1,16 +1,53 @@
-// ─── Transaction ───────────────────────────────────────────────────────────────
-export type TransactionType = "expense" | "income";
+//  src/types/index.ts
 
-export type Transaction = {
+// ─── Transaction ───────────────────────────────────────────────────────────────
+
+export type TransactionType = "expense" | "income" | "transfer";
+
+// Income or expense — has a category and one account
+export type IncomeExpenseTransaction = {
   id: string;
-  type: TransactionType;
+  type: "expense" | "income";
   amount: number;
   category: string;
-  date: string; // ISO date string e.g. "2025-01-15"
+  date: string;
   note?: string;
   accountId: string;
-  createdAt: string; // ISO datetime string
+  createdAt: string;
 };
+
+// Transfer — moves money between two accounts, no category
+export type TransferTransaction = {
+  id: string;
+  type: "transfer";
+  amount: number;
+  fromAccountId: string;
+  toAccountId: string;
+  date: string;
+  note?: string;
+  createdAt: string;
+};
+
+// The union — a Transaction is either an income/expense or a transfer
+export type Transaction = IncomeExpenseTransaction | TransferTransaction;
+
+// ─── Type guards ───────────────────────────────────────────────────────────────
+
+/**
+ * Narrows a Transaction to IncomeExpenseTransaction.
+ * Use this before accessing category or accountId.
+ */
+export function isIncomeExpense(t: Transaction): t is IncomeExpenseTransaction {
+  return t.type === "expense" || t.type === "income";
+}
+
+/**
+ * Narrows a Transaction to TransferTransaction.
+ * Use this before accessing fromAccountId or toAccountId.
+ */
+export function isTransfer(t: Transaction): t is TransferTransaction {
+  return t.type === "transfer";
+}
 
 // ─── Goal ──────────────────────────────────────────────────────────────────────
 export type GoalStatus = "active" | "completed";
@@ -41,7 +78,11 @@ export type Settings = {
   incomeCategories: string[];
 };
 
-// ─── Account ─────────────────────────────────────────────────────────────────
+// ─── Quick Add ─────────────────────────────────────────────────────────────────
+// Used to control the floating + button dialog state
+export type QuickAddType = "expense" | "income" | "transfer";
+
+// ─── Account ───────────────────────────────────────────────────────────────────
 export type AccountType =
   | "chequing"
   | "savings"
@@ -54,12 +95,8 @@ export type Account = {
   type: AccountType;
   bankId?: string; // undefined for cash / investment
   nickname?: string; // undefined = fall back to bank + type label
-  lastFour?: string; // undefined for cash / investment, optional otherwise
+  lastFour?: string; // undefined for cash / investment
   openingBalance: number; // signed: negative for credit card debt
-  creditLimit?: number; // undefined unless credit card with a limit
+  creditLimit?: number; // undefined unless credit card with a limit set
   createdAt: string;
 };
-
-// ─── Quick Add Dialog ──────────────────────────────────────────────────────────
-// Used to control the floating + button dialog state
-export type QuickAddType = "expense" | "income";

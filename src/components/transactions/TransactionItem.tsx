@@ -1,3 +1,4 @@
+// src/components/transactions/TransactionItem.tsx
 "use client";
 
 import { useState } from "react";
@@ -36,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
-import type { Transaction, Account } from "@/types";
+import type { IncomeExpenseTransaction, Account } from "@/types";
 
 function getAccountLabel(account: Account): string {
   if (account.nickname) return account.nickname;
@@ -48,7 +49,7 @@ function getAccountLabel(account: Account): string {
 }
 
 interface TransactionItemProps {
-  transaction: Transaction;
+  transaction: IncomeExpenseTransaction;
 }
 
 export default function TransactionItem({ transaction }: TransactionItemProps) {

@@ -1,14 +1,21 @@
+// src/lib/ai/context/buildYearlyContext.ts
+
 import type { Transaction } from "@/types";
+import { isIncomeExpense } from "@/types";
 
 /**
  * Builds the yearly summary section of the AI context.
  * Gives Claude accurate annual totals by category to answer
  * questions like "how much did I spend on groceries this year?"
+ * Transfers are excluded — they don't affect income/expense totals.
  */
 export function buildYearlyContext(transactions: Transaction[]): string {
   const currentYear = new Date().getFullYear().toString();
 
-  const yearlyTransactions = transactions.filter((t) =>
+  // Filter to income/expense only once — transfers excluded from all yearly calculations
+  const incomeExpenseOnly = transactions.filter(isIncomeExpense);
+
+  const yearlyTransactions = incomeExpenseOnly.filter((t) =>
     t.date.startsWith(currentYear),
   );
 

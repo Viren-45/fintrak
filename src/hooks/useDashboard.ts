@@ -7,6 +7,7 @@ import {
   calcSavingRate,
   calcTotal,
 } from "@/lib/utils/calculations";
+import { isIncomeExpense } from "@/types/index";
 
 // Returns spending totals grouped by category for a given month
 function groupByCategory(
@@ -63,15 +64,20 @@ export function useDashboard() {
   const currentMonth = getCurrentMonth();
 
   const expenses = useMemo(
-    () => allTransactions.filter((t) => t.type === "expense"),
+    () =>
+      allTransactions
+        .filter(isIncomeExpense)
+        .filter((t) => t.type === "expense"),
     [allTransactions],
   );
 
   const income = useMemo(
-    () => allTransactions.filter((t) => t.type === "income"),
+    () =>
+      allTransactions
+        .filter(isIncomeExpense)
+        .filter((t) => t.type === "income"),
     [allTransactions],
   );
-
   // Current month totals
   const monthlyExpenses = useMemo(
     () => expenses.filter((t) => t.date.startsWith(currentMonth)),
@@ -105,7 +111,7 @@ export function useDashboard() {
 
   // Last 5 transactions (income + expenses combined)
   const recentTransactions = useMemo(
-    () => allTransactions.slice(0, 5),
+    () => allTransactions.filter((t) => t.type !== "transfer").slice(0, 5),
     [allTransactions],
   );
 

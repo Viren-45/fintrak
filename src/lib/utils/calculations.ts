@@ -1,3 +1,5 @@
+// src/lib/utils/calculations.ts
+
 /**
  * Calculate percentage of goal completion
  * e.g. saved=500, target=1000 → 50

@@ -1,12 +1,13 @@
+// src/components/transactions/TransactionTabs.tsx
+
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import TransactionList from "./TransactionList";
-import { ArrowLeftRight } from "lucide-react";
+import TransferList from "./TransferList";
 import type { TransactionType } from "@/types";
 
-// The three segments — transfer is a placeholder for now
-type Segment = TransactionType | "transfer";
+type Segment = TransactionType;
 
 const SEGMENTS: { value: Segment; label: string }[] = [
   { value: "expense", label: "Expenses" },
@@ -22,7 +23,6 @@ export default function TransactionTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Read active segment from URL, default to "expense"
   const typeParam = searchParams.get("type");
   const activeSegment: Segment = isValidSegment(typeParam)
     ? typeParam
@@ -45,7 +45,7 @@ export default function TransactionTabs() {
               key={segment.value}
               onClick={() => handleSegmentChange(segment.value)}
               className={`
-                px-4 py-1.5 rounded-md text-sm font-medium transition-colors duration-150
+                px-4 py-1.5 rounded-md text-sm font-medium transition-colors duration-150 cursor-pointer
                 ${
                   isActive
                     ? "bg-fintrak-accent text-white"
@@ -61,22 +61,8 @@ export default function TransactionTabs() {
 
       {/* Active segment content */}
       {activeSegment === "transfer" ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 text-center border border-dashed border-fintrak-border rounded-lg">
-          <div className="p-4 rounded-full bg-fintrak-bg border border-fintrak-border">
-            <ArrowLeftRight size={28} className="text-fintrak-text-secondary" />
-          </div>
-          <div>
-            <p className="text-fintrak-text-primary font-semibold text-lg">
-              Transfers coming soon
-            </p>
-            <p className="text-fintrak-text-secondary text-sm mt-1 max-w-sm">
-              Move money between your accounts and keep your balances accurate.
-            </p>
-          </div>
-        </div>
+        <TransferList />
       ) : (
-        // key forces a fresh mount when switching between income/expense
-        // so filters reset cleanly per segment
         <TransactionList key={activeSegment} type={activeSegment} />
       )}
     </div>

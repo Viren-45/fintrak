@@ -1,3 +1,5 @@
+// src/components/dashboard/RecentTransactions.tsx
+
 "use client";
 
 import Link from "next/link";

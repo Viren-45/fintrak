@@ -1,3 +1,5 @@
+// src/hooks/useTransactions.ts
+
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -30,21 +32,54 @@ async function fetchTransactions(
   const { data, error } = await query;
   if (error) throw error;
 
-  return data.map((row) => ({
-    id: row.id,
-    type: row.type,
-    amount: row.amount,
-    category: row.category,
-    date: row.date,
-    note: row.note ?? undefined,
-    accountId: row.account_id,
-    createdAt: row.created_at,
-  }));
+  return data.map((row): Transaction => {
+    if (row.type === "transfer") {
+      return {
+        id: row.id,
+        type: "transfer",
+        amount: row.amount,
+        fromAccountId: row.from_account_id,
+        toAccountId: row.to_account_id,
+        date: row.date,
+        note: row.note ?? undefined,
+        createdAt: row.created_at,
+      };
+    }
+    return {
+      id: row.id,
+      type: row.type,
+      amount: row.amount,
+      category: row.category,
+      date: row.date,
+      note: row.note ?? undefined,
+      accountId: row.account_id,
+      createdAt: row.created_at,
+    };
+  });
 }
 
 // ─── Add ───────────────────────────────────────────────────────────────────
 
-type AddTransactionInput = Omit<Transaction, "id" | "createdAt">;
+// Explicit input types per transaction shape — avoids Omit-on-union problems
+export type AddIncomeExpenseInput = {
+  type: "expense" | "income";
+  amount: number;
+  category: string;
+  accountId: string;
+  date: string;
+  note?: string;
+};
+
+export type AddTransferInput = {
+  type: "transfer";
+  amount: number;
+  fromAccountId: string;
+  toAccountId: string;
+  date: string;
+  note?: string;
+};
+
+export type AddTransactionInput = AddIncomeExpenseInput | AddTransferInput;
 
 async function addTransaction(input: AddTransactionInput): Promise<void> {
   const {
@@ -52,22 +87,56 @@ async function addTransaction(input: AddTransactionInput): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase.from("transactions").insert({
-    user_id: user.id,
-    type: input.type,
-    amount: input.amount,
-    category: input.category,
-    date: input.date,
-    note: input.note ?? null,
-    account_id: input.accountId,
-  });
-
-  if (error) throw error;
+  if (input.type === "transfer") {
+    const { error } = await supabase.from("transactions").insert({
+      user_id: user.id,
+      type: "transfer",
+      amount: input.amount,
+      from_account_id: input.fromAccountId,
+      to_account_id: input.toAccountId,
+      date: input.date,
+      note: input.note ?? null,
+    });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("transactions").insert({
+      user_id: user.id,
+      type: input.type,
+      amount: input.amount,
+      category: input.category,
+      account_id: input.accountId,
+      date: input.date,
+      note: input.note ?? null,
+    });
+    if (error) throw error;
+  }
 }
 
 // ─── Update ────────────────────────────────────────────────────────────────
 
-type UpdateTransactionInput = Omit<Transaction, "createdAt">;
+export type UpdateIncomeExpenseInput = {
+  id: string;
+  type: "expense" | "income";
+  amount: number;
+  category: string;
+  accountId: string;
+  date: string;
+  note?: string;
+};
+
+export type UpdateTransferInput = {
+  id: string;
+  type: "transfer";
+  amount: number;
+  fromAccountId: string;
+  toAccountId: string;
+  date: string;
+  note?: string;
+};
+
+export type UpdateTransactionInput =
+  | UpdateIncomeExpenseInput
+  | UpdateTransferInput;
 
 async function updateTransaction(input: UpdateTransactionInput): Promise<void> {
   const {
@@ -75,20 +144,34 @@ async function updateTransaction(input: UpdateTransactionInput): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
-    .from("transactions")
-    .update({
-      type: input.type,
-      amount: input.amount,
-      category: input.category,
-      date: input.date,
-      note: input.note ?? null,
-      account_id: input.accountId,
-    })
-    .eq("id", input.id)
-    .eq("user_id", user.id);
-
-  if (error) throw error;
+  if (input.type === "transfer") {
+    const { error } = await supabase
+      .from("transactions")
+      .update({
+        amount: input.amount,
+        from_account_id: input.fromAccountId,
+        to_account_id: input.toAccountId,
+        date: input.date,
+        note: input.note ?? null,
+      })
+      .eq("id", input.id)
+      .eq("user_id", user.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("transactions")
+      .update({
+        type: input.type,
+        amount: input.amount,
+        category: input.category,
+        account_id: input.accountId,
+        date: input.date,
+        note: input.note ?? null,
+      })
+      .eq("id", input.id)
+      .eq("user_id", user.id);
+    if (error) throw error;
+  }
 }
 
 // ─── Delete ────────────────────────────────────────────────────────────────
@@ -128,7 +211,6 @@ export function useTransactions(type?: "expense" | "income") {
     useMutation({
       mutationFn: addTransaction,
       onSuccess: () => {
-        // Invalidate all transaction queries so every tab refreshes
         queryClient.invalidateQueries({ queryKey: ["transactions"] });
       },
     });
