@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import CategoryManager from "./CategoryManager";
 import DeleteAccountSection from "./DeleteAccountSection";
+import AvatarUpload from "@/components/settings/AvatarUpload";
 
 export default function SettingsForm() {
   const {
@@ -26,7 +27,6 @@ export default function SettingsForm() {
   const [incomeCategories, setIncomeCategories] = useState<string[]>([]);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Populate local state once settings load
   const [initialized, setInitialized] = useState(false);
   if (!isLoading && !initialized) {
     setUserName(settings.userName);
@@ -40,7 +40,6 @@ export default function SettingsForm() {
   async function handleSave() {
     setSaveSuccess(false);
     try {
-      // Save name only if it changed — avoids unnecessary auth calls
       const promises: Promise<unknown>[] = [];
 
       if (userName !== settings.userName) {
@@ -56,7 +55,6 @@ export default function SettingsForm() {
       );
 
       await Promise.all(promises);
-
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch {
@@ -91,7 +89,22 @@ export default function SettingsForm() {
             Profile
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
+          {/* ── Avatar ── */}
+          <div className="space-y-2">
+            <Label className="text-fintrak-text-primary text-sm font-medium">
+              Profile photo
+            </Label>
+            <AvatarUpload />
+            <p className="text-xs text-fintrak-text-secondary">
+              Shown in the sidebar and your profile. JPG, PNG, or WebP accepted.
+            </p>
+          </div>
+
+          {/* ── Divider ── */}
+          <div style={{ borderColor: "#E2E8F0" }} className="border-t" />
+
+          {/* ── Name ── */}
           <div className="space-y-1.5">
             <Label className="text-fintrak-text-primary text-sm font-medium">
               Your name
@@ -107,6 +120,7 @@ export default function SettingsForm() {
             </p>
           </div>
 
+          {/* ── Currency ── */}
           <div className="space-y-1.5">
             <Label className="text-fintrak-text-primary text-sm font-medium">
               Currency

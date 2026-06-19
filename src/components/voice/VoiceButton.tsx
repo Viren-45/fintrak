@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, MicOff } from "lucide-react";
+import { AudioLines, Square } from "lucide-react";
 import { useVoiceSession } from "@/hooks/useVoiceSession";
 import VoiceOverlay from "./VoiceOverlay";
 
@@ -33,31 +33,42 @@ export default function VoiceButton() {
       <button
         onClick={handleTap}
         aria-label={isActive ? "Stop voice logging" : "Start voice logging"}
-        className={`
-          fixed bottom-24 right-6 z-40
-          w-12 h-12 rounded-full shadow-lg
-          flex items-center justify-center
-          transition-all duration-200 cursor-pointer
-          ${
-            isActive
-              ? "bg-fintrak-expense hover:bg-fintrak-expense/90 scale-110"
-              : "bg-fintrak-sidebar hover:bg-fintrak-sidebar/90 border border-white/10"
-          }
-        `}
+        style={
+          isActive
+            ? { backgroundColor: "#2563EB" }
+            : { backgroundColor: "#3B82F6" }
+        }
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = isActive
+            ? "#1D4ED8"
+            : "#2563EB";
+          e.currentTarget.style.transform = "scale(1.08)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = isActive
+            ? "#2563EB"
+            : "#3B82F6";
+          e.currentTarget.style.transform = isActive
+            ? "scale(1.1)"
+            : "scale(1)";
+        }}
+        className="fixed bottom-22 right-6 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 cursor-pointer"
       >
         {isActive ? (
-          <MicOff size={20} className="text-white" />
+          <Square size={18} className="text-white" fill="white" />
         ) : (
-          <Mic size={20} className="text-white/80" />
+          <AudioLines size={24} className="text-white" />
         )}
 
         {/* Pulse ring when active */}
         {isActive && (
-          <span className="absolute inset-0 rounded-full bg-fintrak-expense/40 animate-ping" />
+          <span
+            className="absolute inset-0 rounded-full animate-ping"
+            style={{ backgroundColor: "#3B82F6", opacity: 0.4 }}
+          />
         )}
       </button>
 
-      {/* Overlay — only shown when session is active */}
       {overlayVisible && <VoiceOverlay state={state} onStop={handleStop} />}
     </>
   );

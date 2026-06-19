@@ -100,3 +100,46 @@ export type Account = {
   creditLimit?: number; // undefined unless credit card with a limit set
   createdAt: string;
 };
+
+// ─── Recurring Charge ──────────────────────────────────────────────────────────
+
+export type RecurringFrequency = "weekly" | "biweekly" | "monthly" | "yearly";
+export type RecurringStatus = "active" | "paused";
+
+export type RecurringCharge = {
+  id: string;
+  userId: string;
+  accountId: string;
+  name: string;
+  amount: number;
+  category: string;
+  type: "expense" | "income";
+  frequency: RecurringFrequency;
+  nextDueDate: string; // ISO date string e.g. "2026-07-05"
+  endDate: string | null;
+  status: RecurringStatus;
+  createdAt: string;
+};
+
+// Used when creating a new recurring charge — no id, userId, or createdAt yet
+export type AddRecurringChargeInput = {
+  accountId: string;
+  name: string;
+  amount: number;
+  category: string;
+  type: "expense" | "income";
+  frequency: RecurringFrequency;
+  nextDueDate: string;
+  endDate: string | null;
+};
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+export type Notification = {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  read: boolean;
+  createdAt: string;
+};

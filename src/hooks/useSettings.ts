@@ -8,7 +8,10 @@ import type { Settings } from "@/types";
 
 const supabase = createClient();
 
-type SettingsWithName = Settings & { userName: string };
+type SettingsWithName = Settings & {
+  userName: string;
+  avatarUrl: string | null;
+};
 
 // Minimal placeholder shown only while the query is loading
 const EMPTY_SETTINGS: SettingsWithName = {
@@ -16,6 +19,7 @@ const EMPTY_SETTINGS: SettingsWithName = {
   currency: "CAD",
   expenseCategories: [],
   incomeCategories: [],
+  avatarUrl: null,
 };
 
 // ─── Fetch ─────────────────────────────────────────────────────────────────
@@ -51,6 +55,7 @@ async function fetchSettings(): Promise<SettingsWithName> {
     currency: data.currency,
     expenseCategories: data.expense_categories,
     incomeCategories: data.income_categories,
+    avatarUrl: data.avatar_url ?? null,
   };
 }
 
@@ -85,6 +90,22 @@ async function updateUserName(name: string): Promise<void> {
   if (error) throw error;
 }
 
+// ─── Update avatar URL in settings table ───────────────────────────────────
+
+async function updateAvatarUrl(url: string | null): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("settings")
+    .update({ avatar_url: url })
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+}
+
 // ─── Hook ──────────────────────────────────────────────────────────────────
 
 export function useSettings() {
@@ -107,6 +128,7 @@ export function useSettings() {
         (old: SettingsWithName | undefined) => ({
           ...updated,
           userName: old?.userName ?? "",
+          avatarUrl: old?.avatarUrl ?? null,
         }),
       );
     },
@@ -123,13 +145,28 @@ export function useSettings() {
     },
   });
 
+  const { mutateAsync: saveAvatarUrl, isPending: isSavingAvatar } = useMutation(
+    {
+      mutationFn: updateAvatarUrl,
+      onSuccess: (_, url) => {
+        queryClient.setQueryData(
+          ["settings"],
+          (old: SettingsWithName | undefined) =>
+            old ? { ...old, avatarUrl: url } : old,
+        );
+      },
+    },
+  );
+
   return {
     settings,
     isLoading,
     isSaving,
+    isSavingAvatar,
     isSavingName,
     error: error?.message ?? null,
     saveSettings,
     saveUserName,
+    saveAvatarUrl,
   };
 }

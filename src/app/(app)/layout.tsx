@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import Sidebar from "@/components/sidebar/Sidebar";
+import AppHeader from "@/components/layout/AppHeader";
 import { QuickAddProvider } from "@/components/quick-add/QuickAddProvider";
 import QuickAddButton from "@/components/quick-add/QuickAddButton";
 import QuickAddDialog from "@/components/quick-add/QuickAddDialog";
@@ -30,8 +31,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    // Listen for auth state changes
-    // When app resumes from background, this triggers a session check
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -39,7 +38,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         router.push("/login");
       }
       if (event === "TOKEN_REFRESHED") {
-        // Session refreshed successfully — stay on current page
         router.refresh();
       }
     });
@@ -50,11 +48,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <QuickAddProvider>
-        <div className="flex min-h-screen bg-fintrak-bg">
+        <div
+          className="flex min-h-screen"
+          style={{ backgroundColor: "#F9FAFB" }}
+        >
           <Sidebar />
-          <main className="flex-1 lg:p-8 p-4 pt-16 lg:pt-8 min-w-0">
-            {children}
-          </main>
+
+          {/* Right column — header + page content stacked */}
+          <div className="flex flex-col flex-1 min-w-0 lg:ml-60">
+            <AppHeader />
+            <main className="flex-1 lg:p-8 p-4 pt-16 lg:pt-8 min-w-0">
+              {children}
+            </main>
+          </div>
         </div>
         <QuickAddButton />
         <VoiceButton />
